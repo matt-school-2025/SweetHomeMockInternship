@@ -383,29 +383,62 @@ public class HomePrintableComponent extends JComponent implements Printable {
         home.setFurnitureVisibleProperties(originalVisibleProperties);
       }
       if (pageExists == PAGE_EXISTS
-          && !this.printablePages.contains(page)) {
+              && !this.printablePages.contains(page)) {
         this.printablePages.add(page);
         this.furniturePageCount++;
       }
     }
-    if (pageExists == NO_SUCH_PAGE 
-        && planView != null 
-        && (homePrint == null || homePrint.isPlanPrinted())) {
+    if (pageExists == NO_SUCH_PAGE
+            && planView != null
+            && (homePrint == null || homePrint.isPlanPrinted())) {
       // Try to print next plan view page
-      pageExists = ((Printable)planView).print(g2D, pageFormat, page - this.furniturePageCount);
+      // pageExists = ((Printable)planView).print(g2D, pageFormat, page - this.furniturePageCount);
+
+      // 1. Collect all viewable levels in order
+      List<Level> levels = home.getLevels();
+      List<Level> viewableLevels = new ArrayList<Level>();
+      if (levels != null) {
+        for (Level level : levels) {
+          if (level.isViewable()) {
+            viewableLevels.add(level);
+          }
+        }
+      }
+
+       // 2. Map the global page number to a plan page index
+      int planPageIndex = page - this.furniturePageCount;
+
+      // 3. If this page index corresponds to a valid viewable level
+      if (planPageIndex >= 0 && planPageIndex < viewableLevels.size()) {
+        Level targetLevel = viewableLevels.get(planPageIndex);
+        Level originalLevel = home.getSelectedLevel();
+
+        try {
+          // Temporarily set the active level for printing this page
+          home.setSelectedLevel(targetLevel);
+
+          // Print the plan view for this specific level (using index 0 for this level's render)
+          pageExists = ((Printable) planView).print(g2D, pageFormat, 0);
+
+        } finally {
+          // Guaranteed restoration of the user's original selected level
+          home.setSelectedLevel(originalLevel);
+        }
+      }
+
       if (pageExists == PAGE_EXISTS
-          && !this.printablePages.contains(page)) {
+              && !this.printablePages.contains(page)) {
         this.printablePages.add(page);
         this.planPageCount++;
       }
     }
     View view3D = this.controller.getHomeController3D().getView();
     if (pageExists == NO_SUCH_PAGE
-        && view3D != null
-        && (homePrint == null || homePrint.isView3DPrinted())) {
+            && view3D != null
+            && (homePrint == null || homePrint.isView3DPrinted())) {
       pageExists = ((Printable)view3D).print(g2D, pageFormat, page - this.planPageCount - this.furniturePageCount);
       if (pageExists == PAGE_EXISTS
-          && !this.printablePages.contains(page)) {
+              && !this.printablePages.contains(page)) {
         this.printablePages.add(page);
       }
     }
