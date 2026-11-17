@@ -37,11 +37,7 @@ import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.security.AccessControlException;
 import java.text.MessageFormat;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-import java.util.Set;
+import java.util.*;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -346,13 +342,27 @@ public class HomePrintableComponent extends JComponent implements Printable {
     if (furnitureView != null 
         && (homePrint == null || homePrint.isFurniturePrinted())) {
       FurnitureTable furnitureTable = null;
+
+      final Level selectedLevel = home.getSelectedLevel();
+      final List<HomePieceOfFurniture.SortableProperty> originalVisibleProperties =
+              new ArrayList<HomePieceOfFurniture.SortableProperty>(home.getFurnitureVisibleProperties());
+
+      furnitureTable = (FurnitureTable)furnitureView;
       final FurnitureTable.FurnitureFilter furnitureFilter;
       if (furnitureView instanceof FurnitureTable
           && (homePrint == null
               || homePrint.isPlanPrinted()
               || homePrint.isView3DPrinted())) {
-        final Level selectedLevel = home.getSelectedLevel();
-        furnitureTable = (FurnitureTable)furnitureView;
+
+
+
+        List<HomePieceOfFurniture.SortableProperty> printVisibleProperties =
+                new ArrayList<HomePieceOfFurniture.SortableProperty>(originalVisibleProperties);
+        if (!printVisibleProperties.contains(HomePieceOfFurniture.SortableProperty.LEVEL)) {
+          printVisibleProperties.add(HomePieceOfFurniture.SortableProperty.LEVEL);
+        }
+        home.setFurnitureVisibleProperties(printVisibleProperties);
+
         furnitureFilter = furnitureTable.getFurnitureFilter();
         furnitureTable.setFurnitureFilter(new FurnitureTable.FurnitureFilter() {
             public boolean include(Home home, HomePieceOfFurniture piece) {
@@ -370,6 +380,7 @@ public class HomePrintableComponent extends JComponent implements Printable {
       if (furnitureTable != null) {
         // Restore previous filter
         ((FurnitureTable)furnitureView).setFurnitureFilter(furnitureFilter);
+        home.setFurnitureVisibleProperties(originalVisibleProperties);
       }
       if (pageExists == PAGE_EXISTS
           && !this.printablePages.contains(page)) {
