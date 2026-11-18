@@ -342,7 +342,7 @@ public class HomePrintableComponent extends JComponent implements Printable {
     if (furnitureView != null 
         && (homePrint == null || homePrint.isFurniturePrinted())) {
       FurnitureTable furnitureTable = null;
-
+      //Saving Original Visibility Properties
       final Level selectedLevel = home.getSelectedLevel();
       final List<HomePieceOfFurniture.SortableProperty> originalVisibleProperties =
               new ArrayList<HomePieceOfFurniture.SortableProperty>(home.getFurnitureVisibleProperties());
@@ -355,7 +355,7 @@ public class HomePrintableComponent extends JComponent implements Printable {
               || homePrint.isView3DPrinted())) {
 
 
-
+        // Making SortableProperty.LEVEL visible for printing
         List<HomePieceOfFurniture.SortableProperty> printVisibleProperties =
                 new ArrayList<HomePieceOfFurniture.SortableProperty>(originalVisibleProperties);
         if (!printVisibleProperties.contains(HomePieceOfFurniture.SortableProperty.LEVEL)) {
@@ -378,7 +378,7 @@ public class HomePrintableComponent extends JComponent implements Printable {
       // Try to print next furniture view page      
       pageExists = ((Printable)furnitureView).print(g2D, pageFormat, page);
       if (furnitureTable != null) {
-        // Restore previous filter
+        // Restore previous filter (restoring prior Visibility Properties)
         ((FurnitureTable)furnitureView).setFurnitureFilter(furnitureFilter);
         home.setFurnitureVisibleProperties(originalVisibleProperties);
       }
@@ -411,6 +411,7 @@ public class HomePrintableComponent extends JComponent implements Printable {
       // 3. If this page index corresponds to a valid viewable level
       if (planPageIndex >= 0 && planPageIndex < viewableLevels.size()) {
         Level targetLevel = viewableLevels.get(planPageIndex);
+        // Save original level
         Level originalLevel = home.getSelectedLevel();
 
         try {
